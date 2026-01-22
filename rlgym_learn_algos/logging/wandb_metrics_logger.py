@@ -140,7 +140,7 @@ class WandbMetricsLogger(
             name=run_name,
             id=self.run_id,
             resume="allow",
-            reinit=True,
+            reinit="finish_previous",
             settings=wandb.Settings(
                 **self.config.metrics_logger_config.settings_kwargs
             ),
