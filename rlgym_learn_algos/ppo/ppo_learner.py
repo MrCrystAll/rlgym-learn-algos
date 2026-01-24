@@ -162,17 +162,25 @@ class PPOLearner(
         print(
             f"{self.config.agent_controller_name}: {'Total':<10} {total_parameters:<10}"
         )
-
         print(
             f"{self.config.agent_controller_name}: Current Policy Learning Rate: {self.config.learner_config.actor_lr}"
         )
         print(
             f"{self.config.agent_controller_name}: Current Critic Learning Rate: {self.config.learner_config.critic_lr}"
         )
+
         self.cumulative_model_updates = 0
 
         if self.config.checkpoint_load_folder is not None:
             self._load_from_checkpoint()
+            # We want to use the LR from the config, not the checkpoint
+            self.actor_optimizer.param_groups[0][
+                "lr"
+            ] = self.config.learner_config.actor_lr
+            self.critic_optimizer.param_groups[0][
+                "lr"
+            ] = self.config.learner_config.critic_lr
+
         self.minibatch_size = int(
             np.ceil(
                 self.config.learner_config.batch_size
