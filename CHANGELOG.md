@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - added uv.lock file for python dependency management
 - rlgym_learn_algos.logging.wandb imports will throw a ModuleNotFoundError if wandb is not installed
+- `MultiAgentController` and `MultiAgentSubcontroller` classes have been added in the `agent_controller` submodule to replace the multiple agent controller abstraction that used to be in rlgym-learn, with some enhancements. Notably:
+  - The `choose_agents` and `get_action` methods have been updated to include information about which environment each agent id / obs is coming from.
+  - The `choose_agents` method can now optionally return `None`, indicating that the agent subcontroller wants to submit actions for every agent_id in every environment it can.
+  - The `PPOAgentController` class now inherits from `MultiAgentSubcontroller`, meaning it can be used interchangeably as either an `AgentController` or a `MultiAgentSubcontroller`.
+  - Management of choosing env actions and assigning action choices for agents in environments performing a step env action to agent subcontrollers is now centralized in an overridable method in `MultiAgentController`. The default implementation calls reset if all agents in the environment are currently either terminated or truncated, and calls step otherwise, with no request to send state and no shared info setting. Note that the PPOAgentController now relies on this default implementation when used as a `MultiAgentSubcontroller`, which could be breaking if the `RLGym` environment is capable of having agents un-terminate or un-truncate after a previous step where they returned as terminated or truncated.
 
 ### Changed
 
@@ -29,6 +34,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `advantage_normalization` in the `PPOLearnerConfigModel` has been renamed to `advantage_standardization` to better reflect standard terminology.
 - Generic type variables for config model classes no longer have Optional in the type bound. Instead Optional is placed on the type in the derived config dataclass.
 - Fixed issue where PPOLearnerConfigModel and ExperienceBufferConfigModel default device "cpu" would stay as string after construction due to missing validate_default config
+- Update for rlgym-learn 2.0.0a1
+  - The parameter `agent_choice_fn` in the constructor for `PPOAgentController` has had its type updated to reflect how rlgym-learn now supports making choices based on env id as well as agent id, and now defaults to None (meaning all are used).
+  - Log probs are now stored in the `PPOAgentController` and managed during the `get_actions` phase.
+- Choices for AgentIDs in the `PPOAgentController` now only happen once per trajectory instead of every timestep
+- The `PPOAgentController` now enforces that `recalculate_agent_id_every_step` is false in `ProcessConfig` as it breaks how the controller builds up trajectories
+- `EnvTrajectories` has had the `agent_ids` parameter renamed to `env_agent_ids`, and the `agent_choice_fn` has been removed.
+- `EnvTrajectories` now takes an additional parameter `controlled_agents` in the `add_steps` method to filter out any agent ids that had their actions chosen by another agent controller.
+- In `PPOAgentController`, `natural_episode_length_mean`, `natural_episode_length_median`, and `percent_truncated` are no longer calculated due to ambiguity in what data to include or exclude from the statistics.
+- `TrajectoryProcessor`, `Actor`, `Critic`, `BatchRewardTypeNumpyConverter`, and `ObsStandardizer` now are abstract base classes to properly force implementation of abstract methods for type checkers.
 
 ### Removed
 

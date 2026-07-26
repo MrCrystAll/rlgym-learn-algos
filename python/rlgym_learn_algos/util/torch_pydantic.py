@@ -4,40 +4,34 @@ import torch
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
 
-dtype_str_regex = "|".join(
-    set(
-        f"({str(v)[6:]})" for v in torch.__dict__.values() if isinstance(v, torch.dtype)
-    )
-)
-device_str_regex = (
-    "("
-    + "|".join(
-        f"({v})"
-        for v in [
-            "cpu",
-            "cuda",
-            "ipu",
-            "xpu",
-            "mkldnn",
-            "opengl",
-            "opencl",
-            "ideep",
-            "hip",
-            "ve",
-            "fpga",
-            "maia",
-            "xla",
-            "lazy",
-            "vulkan",
-            "mps",
-            "meta",
-            "hpu",
-            "mtia",
-            "privateuseone",
-        ]
-    )
-    + r")(:\d+)?"
-)
+_supported_dtypes = {
+    str(v)[6:] for v in torch.__dict__.values() if isinstance(v, torch.dtype)
+}
+dtype_str_regex = "|".join(f"({v})" for v in _supported_dtypes)
+
+_supported_devices = [
+    "cpu",
+    "cuda",
+    "ipu",
+    "xpu",
+    "mkldnn",
+    "opengl",
+    "opencl",
+    "ideep",
+    "hip",
+    "ve",
+    "fpga",
+    "maia",
+    "xla",
+    "lazy",
+    "vulkan",
+    "mps",
+    "meta",
+    "hpu",
+    "mtia",
+    "privateuseone",
+]
+device_str_regex = "(" + "|".join(f"({v})" for v in _supported_devices) + ")(:\d+)?"
 
 
 # Created using the example here: https://docs.pydantic.dev/latest/concepts/types/#handling-third-party-types
@@ -67,7 +61,8 @@ class _TorchDtypePydanticAnnotation:
                 ]
             ),
             serialization=core_schema.plain_serializer_function_ser_schema(
-                lambda v: str(v)[6:]
+                lambda v: str(v)[6:],
+                return_schema=core_schema.literal_schema(list(_supported_dtypes)),
             ),
         )
 
@@ -103,7 +98,8 @@ class _TorchDevicePydanticAnnotation:
                 ]
             ),
             serialization=core_schema.plain_serializer_function_ser_schema(
-                lambda v: str(v)
+                lambda v: str(v)[6:],
+                return_schema=core_schema.literal_schema(list(_supported_dtypes)),
             ),
         )
 
