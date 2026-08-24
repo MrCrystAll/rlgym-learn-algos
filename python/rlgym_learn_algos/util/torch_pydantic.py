@@ -33,7 +33,6 @@ _supported_devices = [
 ]
 device_str_regex = "(" + "|".join(f"({v})" for v in _supported_devices) + ")(:\d+)?"
 
-
 # Created using the example here: https://docs.pydantic.dev/latest/concepts/types/#handling-third-party-types
 class _TorchDtypePydanticAnnotation:
     @classmethod
