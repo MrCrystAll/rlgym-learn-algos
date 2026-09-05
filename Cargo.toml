@@ -1,6 +1,6 @@
 [package]
 name = "rlgym-learn-algos"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2021"
 description = "Rust backend for the more expensive parts of the rlgym-learn-algos python module"
 license="Apache-2.0"
@@ -16,3 +16,4 @@ pyo3 = { version = "0.29.0", features = ["py-clone"] }
 paste = { package = "pastey", version = "*" }
 itertools = "0.14.0"
 enum-kinds = "0.5.1"
+rand = "0.10.2"
