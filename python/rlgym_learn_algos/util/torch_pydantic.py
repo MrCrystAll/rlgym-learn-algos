@@ -7,6 +7,7 @@ from pydantic_core import core_schema
 _supported_dtypes = {
     str(v)[6:] for v in torch.__dict__.values() if isinstance(v, torch.dtype)
 }
+dtype_str_regex = "|".join(f"({v})" for v in _supported_dtypes)
 
 _supported_devices = [
     "cpu",
@@ -30,6 +31,7 @@ _supported_devices = [
     "mtia",
     "privateuseone",
 ]
+device_str_regex = "(" + "|".join(f"({v})" for v in _supported_devices) + ")(:\d+)?"
 
 # Created using the example here: https://docs.pydantic.dev/latest/concepts/types/#handling-third-party-types
 class _TorchDtypePydanticAnnotation:
@@ -41,7 +43,7 @@ class _TorchDtypePydanticAnnotation:
     ) -> core_schema.CoreSchema:
         from_str_schema = core_schema.chain_schema(
             [
-                core_schema.literal_schema(list(_supported_dtypes)),
+                core_schema.str_schema(pattern=dtype_str_regex),
                 core_schema.no_info_plain_validator_function(
                     lambda v: getattr(torch, v)
                 ),
@@ -73,7 +75,7 @@ class _TorchDevicePydanticAnnotation:
     ) -> core_schema.CoreSchema:
         from_str_schema = core_schema.chain_schema(
             [
-                core_schema.literal_schema(list(_supported_devices)),
+                core_schema.str_schema(pattern=device_str_regex),
                 core_schema.no_info_plain_validator_function(lambda v: torch.device(v)),
             ]
         )
